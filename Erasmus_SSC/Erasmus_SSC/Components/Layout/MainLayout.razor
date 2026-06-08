@@ -1,0 +1,82 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@implements IDisposable
+@using Microsoft.AspNetCore.Components.Authorization
+@using Erasmus_SSC.Client.Components
+
+
+<div class="navbar @(IsHomePage ? "navbar-animated" : "")">
+    <div class="navbar__container">
+
+        <a href="/" class="navbar__logo">
+            <img src="images/ssc-logo_footer.png" class="navbar__logo-img" />
+            <span class="navbar__logo-text">Sustainable Skills in Construction</span>
+        </a>
+
+        <a href="/about" class="nav__link @(Nav.Uri.Contains("/about") ? "active" : "")">About</a>
+
+        <div class="nav__dropdown">
+            <button class="nav__link dropdown__toggle">Partners ▼</button>
+            <div class="dropdown__menu">
+                <a href="/partners/mercantec">Mercantec</a>
+                <a href="/partners/rogaland">Fagskolen Rogaland</a>
+                <a href="/partners/godalen">Godalen</a>
+                <a href="/partners/graafschap">Graafschap</a>
+                <a href="/partners/learnmark">Learnmark</a>
+                <a href="/partners/rakvere">Rakvere Ametikool</a>
+                <a href="/partners/salpaus">Salpaus</a>
+                <a href="/partners/tradium">Tradium</a>
+                <a href="/partners/sint-michiel">VTI</a>
+            </div>
+        </div>
+
+        <a href="/news" class="nav__link @(Nav.Uri.Contains("/news") ? "active" : "")">What's new?</a>
+        <a href="/reports" class="nav__link @(Nav.Uri.Contains("/reports") ? "active" : "")">Reports</a>
+        <a href="/contact" class="nav__link @(Nav.Uri.Contains("/contact") ? "active" : "")">Contact</a>
+      
+      <LoginNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
+        <AdminNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
+        <LogoutNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
+        <FilesNavLink @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
+      
+
+
+    </div>
+</div>
+
+<main>
+    <article class="content px-4">
+        @Body
+    </article>
+</main>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">X</span>
+</div>
+
+<CookieConsent @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+@code{
+    private bool IsHomePage;
+    protected override void OnParametersSet()
+    {
+        var uri = Nav.Uri;
+        IsHomePage = uri.EndsWith("/") || uri.EndsWith("/home", StringComparison.OrdinalIgnoreCase);
+    }
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        JS.InvokeVoidAsync("scrollToTop");
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+}

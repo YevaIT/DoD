@@ -1,0 +1,386 @@
+﻿@page "/admin"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+
+@using Erasmus_SSC.Client.Dtos
+@using Erasmus_SSC.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject AdminNewsApiClient NewsApi
+@inject AdminUsersApiClient AdminApi
+@inject ReportsApiClient ReportsApi
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Nav
+
+<section class="admin-section">
+    <div class="admin-overlay"></div>
+
+    <div class="admin-container">
+        <h1 class="admin-title">Admin Dashboard</h1>
+
+        <div class="admin-card">
+            <h2>Users</h2>
+
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <div class="login__error">@_error</div>
+            }
+
+            <div class="admin-actions">
+                <button class="btn-primary" @onclick="ShowAddUser">Add User</button>
+
+                @if (showAddUserForm)
+                {
+
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Add New User</h3>
+
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input class="form-input" @bind="newUser.UserName" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" class="form-input" @bind="newUser.Email" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" class="form-input" @bind="newUser.Password" />
+                            </div>
+
+                            <div class="form-buttons">
+                                <button class="btn-primary" @onclick="SaveUserAsync" disabled="@_busy">Save</button>
+                                <button class="btn-cancel" @onclick="CancelAddUser" disabled="@_busy">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (_showEditUser)
+                {
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Edit User</h3>
+
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input class="form-input" @bind="_editUser.UserName" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" class="form-input" @bind="_editUser.Email" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>New Password (optional)</label>
+                                <input type="password" class="form-input" @bind="_editUser.Password" />
+                            </div>
+
+                            <div class="form-buttons">
+                                <button class="btn-primary" @onclick="SaveEditUserAsync" disabled="@_busy">Save</button>
+                                <button class="btn-cancel" @onclick="CancelEditUser" disabled="@_busy">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+            @if (_loading)
+            {
+                <p>Loading users...</p>
+            }
+            else
+            {
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th style="width:120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Users)
+                        {
+                            <tr>
+                                <td>@user.Id</td>
+                                <td>@user.Email</td>
+                                <td>@user.UserRole</td>
+                               
+                                <td class="actions">
+                                    <button class="btn-small btn-edit"
+                                            disabled="@_busy"
+                                            @onclick="() => StartEditUser(user)">
+                                        Edit
+                                    </button>
+                                    <button class="btn-small btn-danger"
+                                            disabled="@_busy"
+                                            @onclick="() => DeleteUserAsync(user.Id)">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+
+        <div class="admin-card">
+            <h2>News</h2>
+
+            @if (!string.IsNullOrWhiteSpace(_newsError))
+            {
+                <div class="login__error">@_newsError</div>
+            }
+
+            <div class="admin-actions">
+                <button class="btn-primary" @onclick="ShowAddNews">Add News</button>
+
+                @if (showAddNewsForm)
+                {
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Add News</h3>
+
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input class="form-input" @bind="newNews.Title" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" class="form-input"
+                                       @bind-value="newNews.Date"
+                                       @bind-value:format="yyyy-MM-dd" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description (HTML allowed)</label>
+                                <textarea class="form-input" style="min-height:140px;"
+                                          @bind="newNews.Description"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Image (optional)</label>
+                                <InputFile OnChange="OnNewsImageSelected" />
+                            </div>
+
+                            <div class="form-buttons">
+                                <button class="btn-primary" @onclick="SaveNewsAsync" disabled="@_newsBusy">Save</button>
+                                <button class="btn-cancel" @onclick="CancelAddNews" disabled="@_newsBusy">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (_showEditNews)
+                {
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Edit News</h3>
+
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input class="form-input" @bind="_editNews.Title" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" class="form-input"
+                                       @bind-value="_editNews.Date"
+                                       @bind-value:format="yyyy-MM-dd" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description (HTML allowed)</label>
+                                <textarea class="form-input" style="min-height:140px;"
+                                          @bind="_editNews.Description"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Image (optional)</label>
+                                @if (!string.IsNullOrWhiteSpace(_editNewsExistingImageUrl))
+                                {
+                                    <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 6px;">
+                                        Current image: Yes
+                                    </div>
+                                }
+                                <InputFile OnChange="OnEditNewsImageSelected" />
+                            </div>
+
+                            <div class="form-buttons">
+                                <button class="btn-primary" @onclick="SaveEditNewsAsync" disabled="@_newsBusy">Save</button>
+                                <button class="btn-cancel" @onclick="CancelEditNews" disabled="@_newsBusy">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+            @if (_newsLoading)
+            {
+                <p>Loading news...</p>
+            }
+            else if (NewsItems.Count == 0)
+            {
+                <p>No news yet</p>
+            }
+            else
+            {
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width:70px;">ID</th>
+                            <th>Title</th>
+                            <th style="width:130px;">Date</th>
+                            <th style="width:120px;">Image</th>
+                            <th style="width:120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var n in NewsItems)
+                        {
+                            <tr>
+                                <td>@n.Id</td>
+                                <td>@n.Title</td>
+                                <td>@n.Date.ToString("yyyy-MM-dd")</td>
+                                <td>@(!string.IsNullOrWhiteSpace(n.ImageUrl) ? "Yes" : "No")</td>
+                                <td class="actions">
+                                    <button class="btn-small btn-edit"
+                                            disabled="@_newsBusy"
+                                            @onclick="() => StartEditNews(n)">
+                                        Edit
+                                    </button>
+                                    <button class="btn-small btn-danger"
+                                            disabled="@_newsBusy"
+                                            @onclick="() => DeleteNewsAsync(n.Id)">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <div class="admin-card">
+            <h2>Reports</h2>
+
+            @if (!string.IsNullOrWhiteSpace(_reportsError))
+            {
+                <div class="login__error">@_reportsError</div>
+            }
+
+            <div class="admin-actions">
+                <button type="button" class="btn-primary" @onclick="ShowAddReport">Add Report</button>
+
+                @if (_showAddReport)
+                {
+                    <div class="admin-form-popup">
+                        <div class="admin-form">
+                            <h3>Add Report</h3>
+
+                            @if (!string.IsNullOrWhiteSpace(_reportsError))
+                            {
+                                <div class="login__error">@_reportsError</div>
+                            }
+
+                            @if (ReportLanguages.Count == 0)
+                            {
+                                <div class="login__error">
+                                    Report languages are not available. Check that the database migration for report languages has been applied.
+                                </div>
+                            }
+
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input class="form-input" @bind="_newReportTitle" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>File</label>
+                                <InputFile OnChange="OnReportSelected" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Language</label>
+                                <select class="form-input" @bind="_newReportLanguageId">
+                                    @foreach (var language in ReportLanguages)
+                                    {
+                                        <option value="@language.Id">@language.Name</option>
+                                    }
+                                </select>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(_selectedReportName))
+                            {
+                                <div style="font-size: 0.95rem; opacity: 0.9;">
+                                    Selected file: @_selectedReportName
+                                </div>
+                            }
+
+                            <div class="form-buttons">
+                                <button type="button" class="btn-primary" @onclick="SaveReportAsync" disabled="@(_reportsBusy || ReportLanguages.Count == 0)">Save</button>
+                                <button type="button" class="btn-cancel" @onclick="CancelAddReport" disabled="@_reportsBusy">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (_reportsLoading)
+            {
+                <p>Loading reports...</p>
+            }
+            else if (ReportItems.Count == 0)
+            {
+                <p>No reports yet</p>
+            }
+            else
+            {
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width:70px;">ID</th>
+                            <th>Title</th>
+                            <th>Language</th>
+                            <th>File</th>
+                            <th style="width:150px;">Uploaded</th>
+                            <th style="width:120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var report in ReportItems)
+                        {
+                            <tr>
+                                <td>@report.Id</td>
+                                <td>@report.Title</td>
+                                <td>@report.LanguageName</td>
+                                <td>@report.FileName</td>
+                                <td>@report.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                                <td class="actions">
+                                    <button class="btn-small btn-danger"
+                                            disabled="@_reportsBusy"
+                                            @onclick="() => DeleteReportAsync(report.Id)">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</section>
+
+
+   

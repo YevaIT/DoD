@@ -1,0 +1,204 @@
+﻿.admin-section {
+    position: relative;
+    background: none;
+    color: #fff;
+    text-align: center;
+    padding: 4rem 1rem;
+    overflow: hidden;
+
+}
+
+.admin-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( rgba(0,0,0,0.25), rgba(0,0,0,0.35) );
+    mix-blend-mode: soft-light;
+    z-index: 0;
+
+}
+
+
+.admin-container {
+    position: relative;
+    z-index: 2;
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+.admin-title {
+    color: #103b30;
+    font-weight: 800;
+    font-size: clamp(2.2rem, 6vw, 3.2rem);
+    margin-bottom: 2rem;
+    text-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+.admin-card {
+    background: rgba(255, 250, 240, 0.85);
+    background: linear-gradient(180deg, #fdfaf3 0%, #faf4e8 100%);
+    padding: 2rem;
+    border-radius: 24px;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 25px 35px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.5);
+    backdrop-filter: blur(7px) saturate(120%);
+    color: #103b30;
+}
+
+    .admin-card h2 {
+        margin-bottom: 1rem;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem 2rem;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #fefdf9, #e9fff0);
+    color: #0d2b22;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+    .btn-primary:hover {
+        transform: translateY(-3px) scale(1.03);
+        background: linear-gradient(180deg, #ffffff, #f2ffe8);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary:focus {
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(47, 125, 54, 0.35);
+    }
+
+.btn-small {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    background: #d0ead3;
+    position: relative;
+}
+
+    .btn-small.btn-danger {
+        background: #eab7b7;
+    }
+    .btn-small.btn-edit {
+        background: #cfe7d6; 
+    }
+
+td.actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.admin-table {
+    width: 100%;
+    margin-top: 1rem;
+    border-collapse: collapse;
+}
+
+    .admin-table th,
+    .admin-table td {
+        padding: 0.7rem;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        text-align: left;
+    }
+
+.news-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+
+.news-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.admin-form-popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(6px);
+    overflow: auto;
+    padding: 1.25rem 1rem;
+    z-index: 999;
+}
+
+.admin-form {
+    background: linear-gradient(180deg, #fdfaf3, #faf4e8);
+    padding: 2rem;
+    width: 90%;
+    max-width: 420px;
+    border-radius: 18px;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+    animation: fadeIn .25s ease-out;
+    max-height: none;
+    overflow: visible;
+    margin: 0 auto;
+}
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+    .form-group label {
+        font-weight: 600;
+        margin-bottom: .35rem;
+        display: block;
+        color: #0d2b22;
+    }
+
+.form-input {
+    width: 100%;
+    padding: .7rem 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.18);
+    background: #fff;
+    font-size: 1rem;
+}
+.news-image {
+    width: 120px;
+    height: auto;
+    border-radius: 8px;
+    margin-right: 1rem;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-cancel {
+    padding: .9rem 2rem;
+    border-radius: 8px;
+    background: #f5e2e2;
+    color: #7a1b1b;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

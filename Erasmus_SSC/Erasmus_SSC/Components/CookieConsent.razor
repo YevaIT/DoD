@@ -1,0 +1,86 @@
+﻿@inject IJSRuntime JS
+
+@if (showBanner)
+{
+    <div class="cookie-banner">
+        <p>
+            We use cookies to analyze site traffic. Do you accept analytics cookies?
+            <a href="/Privacy" style="color:#ccc; text-decoration:underline;">Learn more</a>
+        </p>
+        <div>
+            <button class="accept" @onclick="AcceptCookies">Accept</button>
+            <button class="decline" @onclick="DeclineCookies">Decline</button>
+        </div>
+    </div>
+}
+
+@code {
+    private bool showBanner = true;
+
+    private const int ConsentDaysValid = 14;
+    private const string ConsentKey = "cookiesAccepted";        
+    private const string ConsentDateKey = "cookiesAcceptedDate";
+    private const string MeasurementId = "G-S7LPM0YYR3";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            var storedValue = await JS.InvokeAsync<string>("localStorage.getItem", ConsentKey);
+            var storedDate = await JS.InvokeAsync<string>("localStorage.getItem", ConsentDateKey);
+
+            if (!string.IsNullOrWhiteSpace(storedValue) && !string.IsNullOrWhiteSpace(storedDate)
+                && DateTime.TryParse(storedDate, null, System.Globalization.DateTimeStyles.RoundtripKind, out var consentDate))
+            {
+                var stillValid = (DateTime.UtcNow - consentDate.ToUniversalTime()).TotalDays <= ConsentDaysValid;
+
+                if (stillValid)
+                {
+                   
+                    showBanner = false;
+
+                  
+                    if (storedValue == "true")
+                        await JS.InvokeVoidAsync("enableAnalytics", MeasurementId);
+                }
+                else
+                {
+                    
+                    await JS.InvokeVoidAsync("localStorage.removeItem", ConsentKey);
+                    await JS.InvokeVoidAsync("localStorage.removeItem", ConsentDateKey);
+                    showBanner = true;
+                }
+            }
+
+            StateHasChanged();
+        }
+        catch
+        {
+           
+            showBanner = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AcceptCookies()
+    {
+        await JS.InvokeVoidAsync("localStorage.setItem", ConsentKey, "true");
+        await JS.InvokeVoidAsync("localStorage.setItem", ConsentDateKey, DateTime.UtcNow.ToString("O"));
+
+        showBanner = false;
+        await JS.InvokeVoidAsync("enableAnalytics", MeasurementId);
+
+        StateHasChanged();
+    }
+
+    private async Task DeclineCookies()
+    {
+        await JS.InvokeVoidAsync("localStorage.setItem", ConsentKey, "false");
+        await JS.InvokeVoidAsync("localStorage.setItem", ConsentDateKey, DateTime.UtcNow.ToString("O"));
+
+        showBanner = false;
+        StateHasChanged();
+    }
+}

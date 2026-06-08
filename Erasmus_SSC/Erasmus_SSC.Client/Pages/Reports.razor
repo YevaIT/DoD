@@ -1,0 +1,219 @@
+﻿@page "/reports"
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+
+@using Erasmus_SSC.Client.Dtos
+@using Erasmus_SSC.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject ReportsApiClient ReportsApi
+@inject AuthenticationStateProvider AuthProvider
+@inject IJSRuntime JS
+
+<div class="reports-page">
+    <div class="reports-shell">
+        <div class="reports-header">
+            <h1>Reports</h1>
+            <p class="reports-subtitle">
+                Public project reports and downloadable materials.
+            </p>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <div class="reports-message-card reports-error">@_error</div>
+        }
+
+        @if (_loading)
+        {
+            <div class="reports-message-card">
+                <p>Loading reports...</p>
+            </div>
+        }
+        else if (!GroupedReports.Any())
+        {
+            <div class="reports-message-card">
+                <p>No reports available.</p>
+            </div>
+        }
+        else
+        {
+            <div class="reports-list" aria-label="Reports">
+                @foreach (var group in GroupedReports)
+                {
+                    <div class="report-row">
+                        <div class="report-title-group">
+                            <span class="report-file-icon @GetIconClass(group.PrimaryReport)" aria-hidden="true">
+                                @if (IsPdf(group.PrimaryReport))
+                                {
+                                    <span>PDF</span>
+                                }
+                            </span>
+                            <span class="report-title">@group.Title</span>
+                        </div>
+
+                        <div class="report-language-group">
+                            <span class="report-language-label">Available in:</span>
+                            <span class="report-language-links">
+                                @for (var i = 0; i < group.Reports.Count; i++)
+                                {
+                                    var report = group.Reports[i];
+
+                                    <button type="button"
+                                            class="report-language-link"
+                                            title="@GetLanguageTitle(report)"
+                                            @onclick="() => DownloadAsync(report)"
+                                            disabled="@_busy">
+                                        @GetLanguageCode(report)
+                                    </button>
+
+                                    @if (i < group.Reports.Count - 1)
+                                    {
+                                        <span class="report-language-separator">/</span>
+                                    }
+                                }
+                            </span>
+
+                            @if (_isAdmin)
+                            {
+                                <span class="report-admin-actions">
+                                    @foreach (var report in group.Reports)
+                                    {
+                                        <button type="button"
+                                                class="report-delete-link"
+                                                title="Delete @GetLanguageCode(report)"
+                                                @onclick="() => DeleteAsync(report.Id)"
+                                                disabled="@_busy">
+                                            Delete @GetLanguageCode(report)
+                                        </button>
+                                    }
+                                </span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<ReportItemDto> _reports = new();
+    private string? _error;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _isAdmin;
+
+    private List<ReportGroup> GroupedReports =>
+        _reports
+            .GroupBy(x => x.Title.Trim(), StringComparer.OrdinalIgnoreCase)
+            .Select(x => new ReportGroup(
+                string.IsNullOrWhiteSpace(x.First().Title) ? x.First().FileName : x.First().Title,
+                x.OrderBy(report => GetLanguageCode(report)).ThenBy(report => report.FileName).ToList()))
+            .OrderBy(x => x.Title)
+            .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        _isAdmin = state.User.Identity?.IsAuthenticated == true && state.User.IsInRole("Admin");
+
+        await LoadReportsAsync();
+    }
+
+    private async Task LoadReportsAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _reports = await ReportsApi.GetReportsAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _reports = new();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task DownloadAsync(ReportItemDto report)
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            var result = await ReportsApi.DownloadAsync(report.Id);
+            var base64 = Convert.ToBase64String(result.Bytes);
+
+            await JS.InvokeVoidAsync(
+                "fileDownload.saveAsBase64",
+                result.FileName,
+                result.ContentType,
+                base64);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            await ReportsApi.DeleteAsync(id);
+            _reports.RemoveAll(x => x.Id == id);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static string FormatBytes(int bytes)
+    {
+        if (bytes < 1024)
+            return $"{bytes} B";
+
+        if (bytes < 1024 * 1024)
+            return $"{bytes / 1024.0:F1} KB";
+
+        return $"{bytes / 1024.0 / 1024.0:F1} MB";
+    }
+
+    private static bool IsPdf(ReportItemDto report) =>
+        report.FileType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase) ||
+        report.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
+
+    private static string GetIconClass(ReportItemDto report) =>
+        IsPdf(report) ? "is-pdf" : "is-file";
+
+    private static string GetLanguageCode(ReportItemDto report) =>
+        string.IsNullOrWhiteSpace(report.LanguageCode)
+            ? report.LanguageName
+            : report.LanguageCode.ToUpperInvariant();
+
+    private static string GetLanguageTitle(ReportItemDto report) =>
+        $"Download {report.Title} ({report.LanguageName}, {FormatBytes(report.SizeBytes)})";
+
+    private sealed record ReportGroup(string Title, List<ReportItemDto> Reports)
+    {
+        public ReportItemDto PrimaryReport => Reports[0];
+    }
+}
