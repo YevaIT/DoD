@@ -1,0 +1,123 @@
+.map-container[b-xiuhepezel] {
+    position: relative;
+    width: 100%;
+    min-height: 75vh;
+    overflow: hidden;
+}
+
+
+.background-img[b-xiuhepezel] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 98%;
+    object-fit: cover;
+    opacity: 0.22;
+    z-index: 0;
+}
+
+.logo-container[b-xiuhepezel] {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.partner-logo[b-xiuhepezel] {
+    max-width: 210px;
+    height: auto;
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+    .partner-logo:hover[b-xiuhepezel] {
+        transform: scale(1.05);
+        filter: brightness(1.1);
+    }
+
+.content[b-xiuhepezel] {
+    position: relative;
+    z-index: 1;
+    color: #002b5c;
+    font-size: 1.1rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    max-width: 800px;
+    margin: 3rem auto;
+    backdrop-filter: blur(3px);
+}
+
+.title[b-xiuhepezel] {
+    font-size: 1.7rem;
+    font-weight: 650;
+    color: #001e42;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.body[b-xiuhepezel] {
+    position: relative;
+    z-index: 1;
+    color: #0b4124;
+    font-size: 1.1rem;
+    padding: 2rem;
+    background: linear-gradient( 145deg, rgba(250, 245, 230, 0.88) 0%, rgba(255, 255, 250, 0.92) 100% );
+    border: 1px solid rgba(120, 90, 60, 0.15);
+    border-radius: 10px;
+    max-width: 800px;
+    margin: 3rem auto;
+    backdrop-filter: blur(6px) saturate(130%);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    text-align: justify;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    opacity: 0;
+    transform: translateY(-40px);
+    animation: dropIn-b-xiuhepezel 1.2s ease-out forwards;
+}
+
+@keyframes dropIn-b-xiuhepezel {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+}
+
+.content a[b-xiuhepezel] {
+    color: #004080;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+    .content a:hover[b-xiuhepezel] {
+        text-decoration: underline;
+    }
+
+@media (max-width: 768px) {
+
+    .body[b-xiuhepezel] {
+        font-size: 0.95rem;
+        line-height: 1.45;
+        padding: 1.2rem;
+        margin: 2rem auto;
+    }
+
+    .content[b-xiuhepezel] {
+        padding: 1.2rem;
+        font-size: 0.92rem;
+        line-height: 1.45;
+    }
+
+        .content a[b-xiuhepezel] {
+            font-size: 0.92rem;
+        }
+
+    .title[b-xiuhepezel] {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    .partner-logo[b-xiuhepezel] {
+        max-width: 120px;
+        margin-bottom: 1rem;
+    }
+}
