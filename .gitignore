@@ -26,3 +26,5 @@ bin/
 obj/
 [Bb]in/
 [Oo]bj/
+.env
+Erasmus_SSC/Erasmus_SSC/appsettings.Development.json
