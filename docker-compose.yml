@@ -3,27 +3,37 @@ services:
     image: postgres:16-alpine
     container_name: erasmus-postgres
     restart: unless-stopped
+
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
     ports:
       - "5433:5432"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   api:
+    container_name: erasmus-api
 
     build:
-
       context: .
-
       dockerfile: Erasmus_SSC/Erasmus_SSC/Dockerfile
 
+    depends_on:
+      - postgres
+
+    ports:
+      - "8080:8080"
+
     environment:
+      ASPNETCORE_ENVIRONMENT: Production
 
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
 
       Jwt__Key: ${JWT_KEY}
+
 volumes:
   postgres_data:
