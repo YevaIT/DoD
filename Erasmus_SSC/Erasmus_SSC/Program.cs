@@ -6,7 +6,6 @@ using Erasmus_SSC.Models;
 using Erasmus_SSC.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -165,29 +164,6 @@ public class Program
             db.UserRoles.Add(new UserRole { Id = 1, RoleName = "Admin" });
         if (!await db.UserRoles.AnyAsync(r => r.Id == 2))
             db.UserRoles.Add(new UserRole { Id = 2, RoleName = "User" });
-        await db.SaveChangesAsync();
-
-        
-        var hasAdmin = await db.Users.AnyAsync(u => u.RoleId == 1);
-        if (hasAdmin)
-            return;
-
-        const string adminEmail = "admin@local.dev";
-        var emailExists = await db.Users.AnyAsync(u => u.Email.ToLower() == adminEmail);
-        if (emailExists)
-            return;
-
-        var admin = new User
-        {
-            UserName = "admin",
-            Email = adminEmail,
-            RoleId = 1
-        };
-
-        var hasher = new PasswordHasher<User>();
-        admin.PasswordHash = hasher.HashPassword(admin, "Admin123!");
-
-        db.Users.Add(admin);
         await db.SaveChangesAsync();
 
         // Seed news from wwwroot/data/news.json if DB is empty
