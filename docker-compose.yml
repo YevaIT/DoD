@@ -1,8 +1,6 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: erasmus-postgres
-    restart: unless-stopped
 
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -16,8 +14,6 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   api:
-    container_name: erasmus-api
-
     build:
       context: .
       dockerfile: Erasmus_SSC/Erasmus_SSC/Dockerfile
@@ -34,6 +30,8 @@ services:
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
 
       Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: Erasmus_SSC
+      Jwt__Audience: Erasmus_SSC.Client
 
 volumes:
   postgres_data:
