@@ -15,6 +15,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
   api:
     container_name: erasmus-api
 
@@ -22,8 +29,11 @@ services:
       context: .
       dockerfile: Erasmus_SSC/Erasmus_SSC/Dockerfile
 
+    restart: unless-stopped
+
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
     ports:
       - "8080:8080"
@@ -31,7 +41,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
 
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__DefaultConnection: >
+        Host=postgres;
+        Port=5432;
+        Database=${POSTGRES_DB};
+        Username=${POSTGRES_USER};
+        Password=${POSTGRES_PASSWORD}
 
       Jwt__Key: ${JWT_KEY}
 
