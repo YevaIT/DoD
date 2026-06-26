@@ -50,8 +50,5 @@ services:
 
       Jwt__Key: ${JWT_KEY}
 
-    security_opt:
-      - no-new-privileges:true
-
 volumes:
   postgres_data:
